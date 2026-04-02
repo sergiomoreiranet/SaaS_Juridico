@@ -1,222 +1,186 @@
 SaaS LEGALTECH — MASTER ROADMAP
+Legenda: [✅ FEITO] [🔄 EM ANDAMENTO] [ ] PENDENTE
 
-Fase1 - MVP - Escritório piloto rodando, prazos nunca perdidos
-	
-	FI-B1 - Setup inicial
-	
-	Criar repositório Git com estrutura de pastas
-	Instalar Next.js 14 com App Router (único app)
-	Configurar Tailwind CSS
-	Criar conta Supabase e conectar ao projeto
-	Instalar e configurar Drizzle ORM
-	Criar .env com variáveis de ambiente
-	README com decisões técnicas (por que cada escolha)
-	Deploy inicial na Vercel (homepage em branco)
+=======================================================================
+Fase 1 - MVP - Escritório piloto rodando, prazos nunca perdidos
+=======================================================================
 
-	F1-B2 - Multi-tennant + RLS básico
+	F1-B0 - Infraestrutura de Subdomínios & Landing Page
+		[✅] Middleware proxy.ts para roteamento por subdomínio (*.juriadm.com.br)
+		[✅] Landing Page Premium no domínio raiz com Dark Theme + Glassmorphism
+		[✅] Apresentação de Planos (Básico R$97 / Pro R$247 / Elite R$497)
+		[✅] Seção Mobile-First, Depoimentos, CTA Final e Footer
+		[✅] Página /cadastro com formulário de Solicitação de Teste de 15 dias
+		[✅] Geração automática de slug de subdomínio a partir do nome do escritório
+		[✅] API POST /api/cadastro — cria tenant (pending) + usuário com hash bcrypt
+		[✅] Verificação de slug e e-mail duplicados antes de salvar
+		[✅] Tela de sucesso pós-cadastro com e-mail do solicitante exibido
+		[ ] Configuração de DNS Wildcard na Vercel (deploy produção)
 
-	Criar tabela tenants (id, name, slug, plan, created_at)
-	Criar tabela users com tenant_id FK obrigatório
-	Adicionar tenant_id em TODAS as tabelas
-	Criar índices compostos (tenant_id + id)
-	Ativar RLS no Supabase e criar policy básica por tabela
-	Testar RLS: tentar acessar dados de outro tenant
-	Middleware Drizzle que injeta tenant_id (camada extra, não substitui RLS)
-	Garantir que nenhuma query funcione sem tenant_id
+	F1-B1 - Setup inicial
+		[✅] Repositório Git com estrutura de pastas
+		[✅] Next.js 16 com App Router (Turbopack)
+		[✅] Tailwind CSS V4 configurado com Dark Theme e variáveis de cores
+		[✅] Supabase conectado ao projeto
+		[✅] Drizzle ORM instalado e configurado
+		[✅] .env com variáveis de ambiente (DATABASE_URL, AUTH_SECRET, Supabase Keys)
+		[✅] README com decisões técnicas
+		[ ] Deploy na Vercel (com Wildcard domains ativados)
+
+	F1-B2 - Multi-tenant + RLS
+		[✅] Tabela tenants (id, name, slug, plan, status, trial_ends_at, created_at)
+		[✅] Status do tenant: 'pending', 'trial', 'active', 'blocked'
+		[✅] Tabela users (id, tenant_id, email, password, name, oab, phone, role, created_at)
+		[✅] Índice composto (tenant_id + id) na tabela users
+		[✅] RLS ativado no Supabase via script setup-rls.ts
+		[✅] Função get_app_tenant_id() no PostgreSQL para isolamento por JWT
+		[✅] Políticas de isolamento: tenant_isolation e user_isolation
+		[🔄] Lembrete arquitetural: Adicionar tenant_id nas futuras tabelas (cases, etc.)
 
 	F1-B3 - Estado global
+		[✅] Toast de feedback global com Sonner (sucesso, erro, aviso)
+		[✅] Loading state padrão (spinner/skeleton reutilizável)
+		[✅] Error state padrão (mensagem + retry action)
 
-	Loading state padrão (spinner/skeleton reutilizável)
-	Error state padrão (mensagem + retry action)
-	Toast de feedback global (sucesso, erro, aviso)
-	Contexto React para disparar toasts de qualquer componente
-
-	F1-B4 - UI base + componentes
-
-	Layout padrão: sidebar, topbar, área de conteúdo
-	Componente Table reutilizável (colunas, loading, estado vazio)
-	Componente Form reutilizável (campo, label, mensagem de erro)
-	Componente Modal/Drawer para criar e editar registros
-	Componente Badge de status (ativo, arquivado, urgente)
-	Componente Button com variantes (primary, ghost, danger)
-	Testar todos os componentes numa página /ui-kit
+	F1-B4 - Design System & UI Base (Mobile-First Premium)
+		[✅] Paleta: Fundo Carvão (#0a0a0a), Vermelho Escuro (#8b0000), Ouro Champanhe (#d4af37)
+		[✅] Glassmorphism em cards e modais (backdrop-blur + bordas translúcidas)
+		[✅] Dark Theme como padrão absoluto no globals.css
+		[✅] Fonte Inter via Google Fonts
+		[✅] Componente Table e Card responsivos (Mobile = Card / Desktop = Tabela)
+		[✅] Componente Modal/Drawer, Badge de status, Button com variantes
+		[✅] Página /ui-kit de testes
 
 	F1-B5 - Auth com validação server-side
-
-	Instalar e configurar NextAuth.js
-	Tela de login para advogados (email + senha)
-	JWT com tenant_id e role no payload
-	Middleware Next.js de proteção de rotas
-	Validação server-side em toda rota de API (não confiar só no JWT)
-	getServerSession em todo Server Component sensível
-	Retornar 401/403 explícito em APIs sem sessão válida
-	Tela de logout + limpeza de cookie de sessão
+		[✅] NextAuth.js v5 instalado e configurado
+		[✅] Tela de login (/login) com email + senha
+		[✅] JWT com tenant_id e role no payload
+		[✅] proxy.ts protegendo todas as rotas privadas
+		[✅] Bloqueio de acesso se status do tenant for 'pending' ou 'blocked'
+		[✅] getServerSession em Server Components sensíveis
+		[✅] Tela de logout + limpeza de sessão
 
 	F1-B6 - Cadastros jurídicos
+		[✅] Tabela e CRUD de clientes (nome, CPF, email, telefone)
+		[✅] Tabela e CRUD de advogados
+		[✅] Tabela de tipos de ação (trabalhista, cível, criminal…)
+		[✅] Tabela de tribunais (nome, sigla, UF)
+		[✅] Validação com Zod em todos os formulários (client + server)
+		[✅] Listagem com busca e paginação
 
-	Tabela e CRUD de clientes (nome, CPF, email, telefone)
-	Tabela e CRUD de advogados
-	Tabela de tipos de ação (trabalhista, cível, criminal…)
-	Tabela de tribunais (nome, sigla, UF)
-	Validação com Zod em todos os formulários (client + server)
-	Listagem com busca e paginação usando componente Table
-
-	F1-B7 - Dashboard do advogado
-
-	Tela principal: painel de prazos (hoje / semana / atrasado)
-	Card de resumo: total de casos ativos
-	Lista de prazos urgentes com link direto para o caso
-	Fluxo do advogado: login → dashboard → caso → prazo
-	Estado vazio claro quando não há prazos (onboarding hint)
+	F1-B7 - Dashboard do advogado (Tenant)
+		[ ] Tela principal acessada via slug.juriadm.com.br
+		[ ] Banner fixo (Contagem regressiva do Trial de 15 dias)
+		[ ] Painel de prazos (hoje / semana / atrasado)
+		[ ] Card de resumo: total de casos ativos
+		[ ] Lista de prazos urgentes com link direto para o caso
 
 	F1-B8 - Casos + Prazos
+		[ ] Tabela cases (id, tenant_id, cliente_id, advogado_id, tipo_id, número CNJ, status)
+		[ ] CRUD de casos com formulário completo
+		[ ] Tabela deadlines (caso_id, tenant_id, descrição, data, dias_úteis, status)
+		[ ] Tabela tasks (caso_id, tenant_id, descrição, responsável, data, status) — separada de deadlines
+		[ ] Lógica de cálculo de dias úteis (fds + feriados nacionais)
+		[ ] Marcar prazo/tarefa como cumprido
+		[ ] Página de detalhe do caso com histórico de prazos e tarefas
 
-	Tabela cases (id, tenant_id, cliente_id, advogado_id, tipo_id, número CNJ, status)
-	CRUD de casos com formulário completo
-	Tabela deadlines (caso_id, tenant_id, descrição, data, dias_úteis, status)
-	Lógica de cálculo de dias úteis (fds + feriados nacionais)
-	Marcar prazo como cumprido
-	Página de detalhe do caso com histórico de prazos
-	Log no console ao vencer prazo (sem email ainda)
-	Testar com dados reais do escritório piloto por 2 semanas
+	F1-B9 - Painel Super Admin (Aprovação e Gestão do SaaS)
+		[✅] Subdomínio exclusivo: admin.juriadm.com.br (roteado via proxy.ts)
+		[✅] Tela de listagem de escritórios com status 'pending' para aprovação
+		[✅] Ação "Aprovar Tenant": muda status para 'trial', seta trial_ends_at (+15 dias)
+		[✅] Ação "Bloquear Tenant": muda status para 'blocked'
+		[✅] Visualização de métricas: Total de tenants por status
+		[✅] Login exclusivo para o Super Admin do SaaS
 
-Fase2 - V1 - Primeiros clientes pagantes
+=======================================================================
+Fase 2 - V1 - Primeiros clientes pagantes e Onboarding Oficial
+=======================================================================
 
-	F2-B1 - Email de alertas	
-
-	Integrar Resend (texto puro, sem template HTML)
-	Alerta de prazo: D-5, D-2, D-1 (só texto simples)
-	Testar entrega e verificar caixa de spam
-	Ativar só após log funcionar corretamente na Fase 1
+	F2-B1 - Email de alertas
+		[ ] Integrar Resend
+		[ ] Email de aprovação do trial para o escritório
+		[ ] Alertas de prazo: D-5, D-2, D-1
+		[ ] Email de aviso 3 dias antes do fim do trial
+		[ ] Email de conversão ao fim do trial (oferta de upgrade)
+		[ ] Bloqueio gradual: aviso D-3, D-1 antes de bloquear acesso
+		[ ] Fluxo forgot password + reset via email
 
 	F2-B2 - Onboarding guiado
-
-	Wizard de criação do escritório (dados, equipe, configuração)
-	Checklist de setup inicial (tipos de ação, tribunal padrão)
-	Importação de clientes via CSV com preview e validação
-	Email de boas-vindas ao criar escritório
-	Calendário de feriados por tenant (estaduais + customizados)
+		[ ] Wizard de configuração do escritório (logo, dados, customização)
+		[ ] Checklist de setup inicial
+		[ ] Termos de uso e política de privacidade (LGPD + pagamento)
+		[ ] Importação de clientes via CSV
+		[ ] Calendário de feriados por tenant (estaduais + customizados)
 
 	F2-B3 - Lifecycle + auditoria
-
-	Campo status em todos os registros (active/inactive/archived)
-	Ocultar registros inativos nas listagens por padrão
-	Tabela audit_log (tabela, registro_id, campo, antes, depois, user_id, tenant_id)
-	Nunca deletar fisicamente — apenas arquivar
+		[ ] Campo status em todos os registros
+		[ ] Tabela audit_log (tabela, registro_id, campo, action, antes, depois, user_id, tenant_id, timestamp, ip_address, request_id)
+		[ ] Nunca deletar fisicamente — apenas arquivar
+		[ ] Índice em deleted_at em todas as tabelas com soft delete 
 
 	F2-B4 - RBAC + portal do cliente
-
-	Papéis: admin, advogado, estagiário
-	Middleware de permissão por role (server-side)
-	Login do cliente (CPF ou email) com sessão separada
-	Portal cliente: ver status do caso
-	Portal cliente: ver documentos do caso
-	Portal cliente: ver próximas audiências
+		[✅] Papéis: admin, advogado, estagiário
+		[ ] Middleware de permissão por role (server-side)
+		[ ] Login do cliente (CPF ou email) com sessão separada
+		[ ] Portal cliente: status do caso, documentos, audiências
 
 	F2-B5 - RLS avançado
-
-	Policies RLS por role (advogado só vê casos do próprio tenant)
-	Policy separada para portal do cliente (acesso restrito ao próprio caso)
-	Teste de penetração básico: simular acesso indevido
+		[ ] Policies RLS refinadas por role
+		[ ] Policy separada para portal do cliente
+		[ ] Teste de penetração básico
 
 	F2-B6 - Dashboard + busca
-
-	Busca global por cliente, caso, número CNJ
-	Filtros por advogado, status, tipo de ação
-	Widgets extras: tarefas pendentes, audiências da semana
-	Notificação no portal do cliente ao atualizar caso
+		[ ] Busca global por cliente, caso, número CNJ
+		[ ] Busca de conflito de interesses (nome/CPF) ao cadastrar cliente
+		[ ] Widgets extras: tarefas pendentes, audiências
 
 	F2-B7 - Comunicação completa
+		[ ] Templates de email HTML
+		[ ] Histórico de comunicações por caso
 
-	Templates de email HTML: prazo, audiência, atualização
-	Histórico de comunicações por caso
-	Configuração por tenant: quais eventos disparam email
+	F2-B8 - Financeiro Básico (Escritório)
+		[ ] Controle de honorários (A receber, pagos, atrasados)
+		[ ] Controle de despesas/custas por caso
+		[ ] Timesheet básico (Horas trabalhadas)
 
-Fase3 - V2 - Produto maduro e escalável
+	F2-B9 - CRM Jurídico (Intake de Leads)
+		[ ] Board Kanban para captação (Lead > Reunião > Contrato)
+		[ ] Histórico do lead antes de virar um "Caso" ativo
 
-	F3-B1 - Painel SaaS admin
+=======================================================================
+Fase 3 - V2 - Produto maduro e escalável
+=======================================================================
 
-	CRUD de tenants no painel admin
-	Gerenciamento de planos e limites de uso
-	Controle de uso de APIs externas por tenant
-	Provisionamento atômico de novo tenant com seeds iniciais
+	F3-B1 - Faturamento SaaS e Upgrade Completo
+		[ ] Integração com gateway de pagamento (Stripe / Iugu / Asaas)
+		[ ] Checkout de assinatura (migrando de 'trial' para 'active')
+		[ ] Controle de limites por plano (Básico, Pro, Elite)
+		[ ] Bloqueio automático de inadimplentes ('blocked')
 
 	F3-B2 - Documentos avançados
-
-	Upload de documentos por caso (Supabase Storage)
-	Versionamento de documentos com histórico
-	Criptografia de campos sensíveis (CPF, dados pessoais)
-	Separação clara: metadados no banco, conteúdo no storage
+		[ ] Upload (Supabase Storage), Versionamento, Criptografia
+		[ ] Geração de documentos via templates com auto-preenchimento de variáveis (nome, CPF, endereço, número CNJ)
 
 	F3-B3 - Segurança + LGPD
-
-
-	Audit logs imutáveis (append-only, sem update/delete)
-	Log de leitura de dados sensíveis (quem acessou o quê)
-	Fluxo de consentimento LGPD ao criar conta de cliente
-	Exportação de dados do cliente (portabilidade LGPD)
-	Anonimização de dados de clientes inativos
-	Política de retenção configurável por tenant
-	Sanitização obrigatória antes de enviar qualquer dado para LLM
-	Registrar todo uso de IA (o que foi enviado, quando, por quem)
+		[ ] Audit logs imutáveis, Exportação de dados, Retenção
 
 	F3-B4 - Auth avançada
+		[ ] Redis (Refresh token), MFA, Logout por inatividade
 
-	Instalar e configurar Redis
-	Refresh token rotativo com revogação via Redis
-	MFA para ações críticas (deletar caso, exportar dados)
-	Logout por inatividade configurável (padrão: 30 min)
+	F3-B5 - Financeiro avançado + NFS-e
+		[ ] Emissão de NFS-e vinculada aos honorários
+		[ ] Relatórios financeiros por período
 
-	F3-B5 - Financeiro + Timesheet
+	F3-B6 - Integrações Avançadas
+		[ ] Sincronização bidirecional de prazos/tarefas com Google Calendar / Outlook
 
-	Tabela de honorários por caso (valor, forma, vencimento)
-	Controle de custas processuais
-	Controle de horas trabalhadas por advogado/caso
-	Geração de recibo em PDF simples
+=======================================================================
+Fase 4 - V3+ - Escala, diferenciais e IA
+=======================================================================
 
-
-Fase4 - V3+ - Escala, diferenciais e IA
-
-	F4-B1 - Checklist jurídico
-
-	Checklist por tipo de ação (ex: trabalhista → 12 etapas)
-	Pendências automáticas ao criar caso
-	Progresso visual do checklist no portal do cliente
-
-	F4-B2 - Automação + Assinatura
-
-	Templates de documentos com placeholders ({{nome_cliente}})
-	Geração automática de documento a partir dos dados do caso
-	Integração D4Sign ou Clicksign (SignatureProvider desacoplado)
-	Acompanhar status de assinatura em tempo real
-
-	F4-B3 - Monitoramento CNJ
-
-	Integrar Escavador API (consulta por número CNJ)
-	Cache de consultas para controle de custo por tenant
-	Alertas automáticos de movimentação processual
-	Fallback para API pública do CNJ quando Escavador falhar
-
-	F4-B4 - API pública + Webhooks
-
-	API v1 com autenticação por API key por tenant
-	Webhooks para eventos (prazo vencendo, caso atualizado)
-	Providers desacoplados: Tribunal, Assinatura, Notificação
-
-	F4-B5 - White label + PWA
-
-	Logo e cores configuráveis por tenant
-	CSS dinâmico injetado por tenant
-	Portal do cliente com branding próprio do escritório
-	PWA: manifest.json + service worker para mobile
-
-	F4-B6 - IA + Analytics + Infra
-
-	Migrar para Turborepo (separar web, admin, client em apps)
-	OCR de documentos para extração automática de dados
-	IA: tradução de juridiquês para linguagem simples (com revisão humana)
-	Dashboard analytics por escritório
-	Backup automático com retenção e restore testado
-	Suporte a tenant dedicado (banco isolado para clientes premium)
-
-
+	F4-B1 - Checklist jurídico por tipo de ação
+	F4-B2 - Automação + Assinatura Digital (D4Sign/Clicksign)
+	F4-B3 - Monitoramento CNJ (Escavador API)
+	F4-B4 - API pública + Webhooks por tenant
+	F4-B5 - White label + PWA para mobile
+	F4-B6 - IA (OCR, tradução de juridiquês) + Analytics + Infra dedicada
