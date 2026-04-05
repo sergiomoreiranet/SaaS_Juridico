@@ -14,4 +14,4 @@ teste@hotmail.com
 
 ---------------------------------------------
 
-F1-B7 - Dashboard do advogado (Tenant)
+F1-B8 - Casos + Prazos (Prazos e Tarefas)

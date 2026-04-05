@@ -69,11 +69,11 @@ Fase 1 - MVP - Escritório piloto rodando, prazos nunca perdidos
 		[✅] Listagem com busca e paginação
 
 	F1-B7 - Dashboard do advogado (Tenant)
-		[ ] Tela principal acessada via slug.juriadm.com.br
-		[ ] Banner fixo (Contagem regressiva do Trial de 15 dias)
-		[ ] Painel de prazos (hoje / semana / atrasado)
-		[ ] Card de resumo: total de casos ativos
-		[ ] Lista de prazos urgentes com link direto para o caso
+		[✅] Tela principal acessada via slug.juriadm.com.br
+		[✅] Banner fixo (Contagem regressiva do Trial de 15 dias)
+		[✅] Painel de prazos (hoje / amanhã / atrasados)
+		[✅] Card de resumo: total de casos ativos e atrasados
+		[✅] Lista de prazos urgentes com link direto para o caso
 
 	F1-B8 - Casos + Prazos
 		[ ] Tabela cases (id, tenant_id, cliente_id, advogado_id, tipo_id, número CNJ, status)
