@@ -1,7 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { LogOut, ShieldAlert } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 export default function BlockedPage() {
+  async function handleSignOut() {
+    await signOut({ redirect: true, callbackUrl: "/login" });
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a] font-sans antialiased text-white">
       {/* Background Glow */}
@@ -22,21 +29,22 @@ export default function BlockedPage() {
           <p className="text-white/60 text-sm leading-relaxed mb-8 px-4">
             Detectamos uma irregularidade ou inadimplência ligada a este escritório. O acesso de toda a equipe encontra-se temporariamente bloqueado. Contate nosso suporte corporativo para regularização.
           </p>
-          
+
           <div className="space-y-3">
-            <a href="mailto:suporte@juriadm.com.br" className="flex items-center justify-center gap-2 w-full py-4 rounded-xl font-medium text-white transition-all bg-gradient-to-r from-[#8b0000] to-[#a31111] shadow-[0_0_20px_rgba(139,0,0,0.2)] hover:opacity-90">
+            <a
+              href="mailto:suporte@juriadm.com.br"
+              className="flex items-center justify-center gap-2 w-full py-4 rounded-xl font-medium text-white transition-all bg-gradient-to-r from-[#8b0000] to-[#a31111] shadow-[0_0_20px_rgba(139,0,0,0.2)] hover:opacity-90"
+            >
               Falar com o Suporte
             </a>
-            <form action={async () => {
-              "use server";
-              const { signOut } = await import("@/auth");
-              await signOut({ redirectTo: "/login" });
-            }}>
-              <button type="submit" className="inline-flex items-center justify-center gap-2 w-full py-4 rounded-xl font-medium text-white/60 hover:text-white transition-all bg-transparent hover:bg-white/5 border border-transparent hover:border-white/10">
-                <LogOut className="w-4 h-4" />
-                Sair desta conta
-              </button>
-            </form>
+
+            <button
+              onClick={handleSignOut}
+              className="inline-flex items-center justify-center gap-2 w-full py-4 rounded-xl font-medium text-white/60 hover:text-white transition-all bg-transparent hover:bg-white/5 border border-transparent hover:border-white/10 cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              Sair desta conta
+            </button>
           </div>
         </div>
       </div>

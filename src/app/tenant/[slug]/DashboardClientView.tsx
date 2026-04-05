@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// ── Mock Data ──────────────────────────────────────────────────────────────
+// ── Mock Data Restante ────────────────────────────────────────────────────────------
 const billingData = [
   { month: "Jan", horas: 10 },
   { month: "Fev", horas: 32 },
@@ -25,33 +25,25 @@ const billingData = [
   { month: "Set", horas: 85 },
 ];
 
-const recentCases = [
-  { id: 1, name: "Caso Empresa A", client: "Washingham", status: "Ativo", due: "05/1/2024", lead: "Jone Wrighe" },
-  { id: 2, name: "Fusão Internacional", client: "Lexington", status: "Pendente", due: "03/1/2024", lead: "Jonathan" },
-  { id: 3, name: "Contrato XYZ", client: "Lexington", status: "Pendente", due: "05/1/2024", lead: "Jone Wrighe" },
-  { id: 4, name: "Processo Trabalhista", client: "Washingham", status: "Fechado", due: "06/1/2024", lead: "Jone Mopis" },
-  { id: 5, name: "Análise Tributária", client: "Lexington", status: "Fechado", due: "06/1/2024", lead: "Jonathan" },
-];
-
-const calendarEvents = {
-  today: [
-    { time: "10:00 - 2:00PM", title: "Compromisso agendado", color: "bg-[#cca77b]" },
-    { time: "10:00 - 19:00", title: "Compromissos agendados", color: "bg-red-900" },
-  ],
-  tomorrow: [
-    { time: "Sun. - 3:30 PM", title: "Compromisso agendado", color: "bg-zinc-600" },
-  ],
-};
-
 const activityFeed = [
-  { icon: <Users className="w-4 h-4 text-[#cca77b]" />, text: "Ações recentes de clientes", time: "Remember 1 days ago" },
-  { icon: <FileText className="w-4 h-4 text-[#cca77b]" />, text: "Documentos enviados/assinados", time: "20 hours ago" },
-  { icon: <AlertCircle className="w-4 h-4 text-[#8b0000]" />, text: "Verificação de documentos", time: "30 hours ago" },
-  { icon: <FileText className="w-4 h-4 text-zinc-500" />, text: "Ações do sistema", time: "6 hours ago" },
+  { icon: <Users className="w-4 h-4 text-[#cca77b]" />, text: "Ações recentes de clientes", time: "Há 1 dia" },
+  { icon: <FileText className="w-4 h-4 text-[#cca77b]" />, text: "Documentos despachados", time: "Há 20 horas" },
+  { icon: <AlertCircle className="w-4 h-4 text-[#8b0000]" />, text: "Novo prazo cadastrado", time: "Há 30 horas" },
+  { icon: <FileText className="w-4 h-4 text-zinc-500" />, text: "Sistema atualizado", time: "Há 6 horas" },
 ];
+
+export interface DashboardProps {
+  totalClients: number;
+  totalActiveCases: number;
+  recentCases: Array<{ id: number; name: string; client: string; status: string; due: string; lead: string }>;
+  calendarEvents: {
+    today: Array<{ time: string; title: string; color: string }>;
+    tomorrow: Array<{ time: string; title: string; color: string }>;
+  };
+}
 
 // ── COMPONENTE PRINCIPAL ───────────────────────────────────────────────────
-export function DashboardClientView({ totalClients }: { totalClients: number }) {
+export function DashboardClientView({ totalClients, totalActiveCases, recentCases, calendarEvents }: DashboardProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -77,14 +69,14 @@ export function DashboardClientView({ totalClients }: { totalClients: number }) 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="rounded-2xl border border-[#cca77b]/35 bg-[#121212] p-7 shadow-lg relative overflow-hidden group hover:border-[#cca77b]/50 transition-all cursor-pointer">
           <div className="absolute inset-0 bg-gradient-to-br from-[#cca77b]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <p className="text-[15px] font-medium text-zinc-300 mb-5 relative z-10 tracking-wide">Casos Ativos</p>
-          <p className="text-[52px] font-medium text-[#cca77b] relative z-10 leading-none">184</p>
+          <p className="text-[15px] font-medium text-zinc-300 mb-5 relative z-10 tracking-wide">Processos Ativos</p>
+          <p className="text-[52px] font-medium text-[#cca77b] relative z-10 leading-none">{totalActiveCases}</p>
         </div>
 
         <div className="rounded-2xl border border-[#cca77b]/35 bg-[#121212] p-7 shadow-lg relative overflow-hidden group hover:border-[#cca77b]/50 transition-all cursor-pointer">
           <div className="absolute inset-0 bg-gradient-to-br from-[#cca77b]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <p className="text-[15px] font-medium text-zinc-300 mb-5 relative z-10 tracking-wide">Novos Clientes</p>
-          <p className="text-[52px] font-medium text-[#cca77b] relative z-10 leading-none">21</p>
+          <p className="text-[52px] font-medium text-[#cca77b] relative z-10 leading-none">{totalClients}</p>
         </div>
 
         <div className="rounded-2xl border border-[#cca77b]/50 bg-gradient-to-br from-[#121212] to-[#1a1710] p-7 shadow-lg relative overflow-hidden group hover:border-[#cca77b]/70 transition-all cursor-pointer">
@@ -102,13 +94,13 @@ export function DashboardClientView({ totalClients }: { totalClients: number }) 
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#cca77b]/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
 
           <div className="flex items-center justify-between px-7 py-6 relative z-10">
-            <h2 className="text-lg font-medium text-[#f5f5f5]">Casos Recentes</h2>
+            <h2 className="text-lg font-medium text-[#f5f5f5]">Processos Recentes</h2>
             <button className="text-zinc-500 hover:text-[#cca77b] transition-colors">
               <MoreHorizontal className="w-5 h-5" />
             </button>
           </div>
           <div className="px-7 pb-2 grid grid-cols-5 text-[13px] text-zinc-400 font-medium mb-3 relative z-10">
-            <span className="col-span-1">Nome do Caso</span>
+            <span className="col-span-1">Nome do Processo</span>
             <span className="col-span-1">Cliente</span>
             <span className="col-span-1">Status</span>
             <span className="col-span-1">Prazo</span>

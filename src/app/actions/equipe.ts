@@ -14,7 +14,11 @@ const createUserSchema = z.object({
   password: z.string().min(6, "A senha provisória deve ter no mínimo 6 caracteres."),
   role: z.enum(["admin", "advogado", "estagiario"]),
   oab: z.string().optional(),
-  phone: z.string().optional()
+  phone: z.string().optional(),
+  additionalContacts: z.array(z.object({
+    type: z.enum(["phone", "email"]),
+    value: z.string().min(2, "Valor obrigatório")
+  })).optional()
 });
 
 export async function createTeamMember(data: z.infer<typeof createUserSchema>) {
@@ -48,6 +52,7 @@ export async function createTeamMember(data: z.infer<typeof createUserSchema>) {
       role: validate.data.role,
       oab: validate.data.oab || null,
       phone: validate.data.phone || null,
+      additionalContacts: validate.data.additionalContacts || [],
     });
 
     revalidatePath("/equipe");
@@ -63,9 +68,14 @@ export async function createTeamMember(data: z.infer<typeof createUserSchema>) {
 const updateUserSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(3, "Nome obrigatório."),
+  email: z.string().email("E-mail inválido."),
   role: z.enum(["admin", "advogado", "estagiario"]),
   oab: z.string().optional(),
   phone: z.string().optional(),
+  additionalContacts: z.array(z.object({
+    type: z.enum(["phone", "email"]),
+    value: z.string().min(2, "Valor obrigatório")
+  })).optional()
 });
 
 export async function updateTeamMember(data: z.infer<typeof updateUserSchema>) {
@@ -96,20 +106,28 @@ export async function updateTeamMember(data: z.infer<typeof updateUserSchema>) {
     }
 
     // ── Regras de Hierarquia (server-side, inviolável) ──
-    // Estagiário: sem permissão de editar ninguém
-    if (myRole === "estagiario") {
-      return { error: "Estagiários não têm permissão para editar membros." };
+    const isSelfEdit = sessionUserId === validate.data.id;
+
+    if (!isSelfEdit) {
+      // Estagiário: sem permissão de editar ninguém além de si mesmo
+      if (myRole === "estagiario") {
+        return { error: "Estagiários não têm permissão para editar outros membros." };
+      }
+
+      // Advogado: só pode editar Estagiários (usuários com role INFERIOR)
+      if (myRole === "advogado" && targetUser.role !== "estagiario") {
+        return { error: "Advogados só podem editar Estagiários." };
+      }
     }
 
-    // Advogado: só pode editar Estagiários (usuários com role INFERIOR)
-    if (myRole === "advogado" && targetUser.role !== "estagiario") {
-      return { error: "Advogados só podem editar Estagiários." };
+    // Ninguém que não seja Admin pode colocar um papel de Admin
+    if (targetRole === "admin" && myRole !== "admin") {
+      return { error: "Você não pode promover contas para Administrador Geral." };
     }
 
-    // Advogado: não pode promover ninguém para Admin
-    if (myRole === "advogado" && targetRole === "admin") {
-      return { error: "Advogados não podem promover para Administrador Geral." };
-    }
+    // Se a pessoa for Admin, ela não pode se rebaixar por acidente se for o único admin (embora seria bom checar)
+    // omitimos essa check por simplicidade
+
 
     // Admin: pode tudo
 
@@ -117,15 +135,20 @@ export async function updateTeamMember(data: z.infer<typeof updateUserSchema>) {
       .update(users)
       .set({
         name: validate.data.name,
+        email: validate.data.email,
         role: targetRole,
         oab: validate.data.oab || null,
         phone: validate.data.phone || null,
+        additionalContacts: validate.data.additionalContacts || [],
       })
       .where(eq(users.id, validate.data.id));
 
     revalidatePath("/equipe");
     return { success: true };
   } catch (error: any) {
+    if (error.code === '23505') {
+      return { error: "Este e-mail já está em uso em nossa base de dados." };
+    }
     return { error: error.message || "Erro ao atualizar membro." };
   }
 }

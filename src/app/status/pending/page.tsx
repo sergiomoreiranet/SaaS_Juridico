@@ -1,7 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { LogOut, Clock } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 export default function PendingPage() {
+  async function handleSignOut() {
+    // signOut do next-auth/react no cliente garante limpeza correta do cookie
+    // e redireciona para /login no mesmo subdomínio
+    await signOut({ redirect: true, callbackUrl: "/login" });
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a] font-sans antialiased text-white">
       {/* Background Glow */}
@@ -23,16 +32,13 @@ export default function PendingPage() {
             Sua solicitação está sendo cuidadosamente revisada pela nossa equipe de consultores. Em breve, você receberá um e-mail com a liberação do seu acesso de 15 dias gratuitos ao JuriADM.
           </p>
 
-          <form action={async () => {
-            "use server";
-            const { signOut } = await import("@/auth");
-            await signOut({ redirectTo: "/login" });
-          }}>
-            <button type="submit" className="inline-flex items-center justify-center gap-2 w-full py-4 rounded-xl font-medium text-white/80 hover:text-white transition-all bg-white/5 hover:bg-white/10 border border-white/10">
-              <LogOut className="w-4 h-4" />
-              Sair desta conta
-            </button>
-          </form>
+          <button
+            onClick={handleSignOut}
+            className="inline-flex items-center justify-center gap-2 w-full py-4 rounded-xl font-medium text-white/80 hover:text-white transition-all bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+            Sair desta conta
+          </button>
         </div>
       </div>
     </div>

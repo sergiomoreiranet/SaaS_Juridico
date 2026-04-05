@@ -27,6 +27,7 @@ export default async function EquipePage() {
       role: users.role,
       oab: users.oab,
       phone: users.phone,
+      additionalContacts: users.additionalContacts,
       createdAt: users.createdAt,
     })
     .from(users)

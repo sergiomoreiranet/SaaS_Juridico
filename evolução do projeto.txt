@@ -1,0 +1,17 @@
+
+para acessar o admin
+ser-moreira@hotmail.com
+Admin@2026
+
+---------------------------------------------
+
+
+
+http://suelipinheiro.localhost:3000/login
+
+teste@hotmail.com
+123456
+
+---------------------------------------------
+
+F1-B7 - Dashboard do advogado (Tenant)

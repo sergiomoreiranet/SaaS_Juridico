@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:admin": "dotenv -e .env tsx src/db/seed-super-admin.ts"
+    "seed:admin": "dotenv -e .env tsx src/db/seed-super-admin.ts",
+    "db:migrate": "dotenv -e .env tsx scripts/migrateSchema.ts",
+    "seed:courts": "dotenv -e .env tsx scripts/seedCourts.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

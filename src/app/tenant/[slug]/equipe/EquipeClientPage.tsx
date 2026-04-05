@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,13 @@ import { Modal } from "@/components/ui/modal";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Phone, Mail } from "lucide-react";
 import { createTeamMember, updateTeamMember, removeTeamMember } from "@/app/actions/equipe";
+
+const contactSchema = z.array(z.object({
+  type: z.enum(["phone", "email"]),
+  value: z.string().min(2, "Valor obrigatório")
+})).optional();
 
 // Schema para criação (requer senha)
 const createSchema = z.object({
@@ -22,14 +27,16 @@ const createSchema = z.object({
   role: z.enum(["admin", "advogado", "estagiario"]),
   oab: z.string().optional(),
   phone: z.string().optional(),
+  additionalContacts: contactSchema
 });
 
-// Schema para edição (sem senha)
 const editSchema = z.object({
   name: z.string().min(3, "Nome é obrigatório."),
+  email: z.string().email("E-mail inválido."),
   role: z.enum(["admin", "advogado", "estagiario"]),
   oab: z.string().optional(),
   phone: z.string().optional(),
+  additionalContacts: contactSchema
 });
 
 type CreateData = z.infer<typeof createSchema>;
@@ -39,6 +46,16 @@ const inputClass = "bg-juridico-plate/50 border-white/10 text-white focus-visibl
 const selectClass = "flex h-10 w-full rounded-md border border-white/10 bg-juridico-plate/50 px-3 py-2 text-sm text-white outline-none focus:border-juridico-gold focus:ring-1 focus:ring-juridico-gold disabled:opacity-50 transition-all";
 const btnPrimary = "bg-juridico-brand hover:bg-juridico-brandlight text-white shadow-[0_0_15px_rgba(139,0,0,0.3)] border border-juridico-brandlight/50";
 const btnGhost = "text-zinc-400 hover:text-white hover:bg-white/5";
+
+const phoneMask = (v: string) => {
+  if (!v) return "";
+  v = v.replace(/\D/g, "");
+  if (v.length > 11) v = v.substring(0, 11);
+  if (v.length > 10) return v.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
+  if (v.length > 5) return v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+  if (v.length > 2) return v.replace(/^(\d{2})(\d{0,5})/, "($1) $2");
+  return v;
+};
 
 export default function EquipeClientPage({
   initialData,
@@ -79,22 +96,32 @@ export default function EquipeClientPage({
   // Form de criação
   const createForm = useForm<CreateData>({
     resolver: zodResolver(createSchema),
-    defaultValues: { role: "advogado" }
+    defaultValues: { role: "advogado", additionalContacts: [] }
+  });
+  const { fields: createContacts, append: appendCreateContact, remove: removeCreateContact } = useFieldArray({
+    control: createForm.control,
+    name: "additionalContacts"
   });
 
   // Form de edição
   const editForm = useForm<EditData>({
     resolver: zodResolver(editSchema),
+    defaultValues: { additionalContacts: [] }
+  });
+  const { fields: editContacts, append: appendEditContact, remove: removeEditContact } = useFieldArray({
+    control: editForm.control,
+    name: "additionalContacts"
   });
 
-  // Abre modal de edição preenchendo os campos
   const openEdit = (member: any) => {
     setSelectedMember(member);
     editForm.reset({
       name: member.name,
+      email: member.email,
       role: member.role,
       oab: member.oab || "",
       phone: member.phone || "",
+      additionalContacts: Array.isArray(member.additionalContacts) ? member.additionalContacts : []
     });
     setIsEditOpen(true);
   };
@@ -181,6 +208,7 @@ export default function EquipeClientPage({
               <TableHead>Membro</TableHead>
               <TableHead>Papel</TableHead>
               <TableHead>OAB</TableHead>
+              <TableHead>Contatos</TableHead>
               <TableHead>Acesso</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -188,7 +216,7 @@ export default function EquipeClientPage({
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-zinc-500">
+                <TableCell colSpan={6} className="h-24 text-center text-zinc-500">
                   Nenhum membro encontrado.
                 </TableCell>
               </TableRow>
@@ -197,14 +225,14 @@ export default function EquipeClientPage({
                 // Define se o usuário logado pode editar ESTE membro específico
                 const canEditThisUser =
                   currentUserRole === "admin" || // Admin edita todos
-                  (currentUserRole === "advogado" && member.role === "estagiario"); // Advogado só edita estagiários
+                  (currentUserRole === "advogado" && member.role === "estagiario") || // Advogado só edita estagiários
+                  member.id === currentUserId; // Permite o usuário logado editar a si mesmo
 
                 return (
                 <TableRow key={member.id}>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="font-medium text-white">{member.name}</span>
-                      <span className="text-sm text-zinc-400">{member.email}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -213,6 +241,32 @@ export default function EquipeClientPage({
                      <Badge>Advogado</Badge>}
                   </TableCell>
                   <TableCell className="text-zinc-400">{member.oab || "—"}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2 text-sm text-zinc-300">
+                        <Mail className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                        <a href={`mailto:${member.email}`} className="hover:text-juridico-gold hover:underline transition-colors truncate max-w-[150px] sm:max-w-xs">{member.email}</a>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-zinc-300">
+                        <Phone className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                        {member.phone ? (
+                          <a href={`https://wa.me/55${member.phone.replace(/\D/g, '')}`} target="_blank" className="hover:text-green-400 hover:underline transition-colors">{phoneMask(member.phone)}</a>
+                        ) : (
+                          <span className="text-zinc-600 text-xs italic">Não informado</span>
+                        )}
+                      </div>
+                      {member.additionalContacts && member.additionalContacts.map((contact: any, i: number) => (
+                        <div key={i} className="flex items-center gap-2 text-[13px] text-zinc-400 mt-0.5">
+                          {contact.type === "email" ? <Mail className="w-3 h-3 text-zinc-600 shrink-0" /> : <Phone className="w-3 h-3 text-zinc-600 shrink-0" />}
+                          {contact.type === "phone" ? (
+                            <a href={`https://wa.me/55${contact.value.replace(/\D/g, '')}`} target="_blank" className="hover:text-zinc-300 hover:underline transition-colors">{phoneMask(contact.value)}</a>
+                          ) : (
+                            <a href={`mailto:${contact.value}`} className="hover:text-zinc-300 hover:underline transition-colors truncate max-w-[150px] sm:max-w-xs">{contact.value}</a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-zinc-500">
                     {new Date(member.createdAt).toLocaleDateString("pt-BR")}
                   </TableCell>
@@ -277,7 +331,7 @@ export default function EquipeClientPage({
             </div>
             <div className="space-y-1">
               <Label htmlFor="c_phone" className="text-juridico-gold">Celular</Label>
-              <Input id="c_phone" {...createForm.register("phone")} className={inputClass} />
+              <Input id="c_phone" {...createForm.register("phone")} onChange={(e) => { e.target.value = phoneMask(e.target.value); createForm.register("phone").onChange(e); }} className={inputClass} placeholder="(11) 99999-9999" />
             </div>
           </div>
           <div className="space-y-1">
@@ -290,6 +344,34 @@ export default function EquipeClientPage({
             <Input id="c_password" type="text" {...createForm.register("password")} className={`${inputClass} ${createForm.formState.errors.password ? "border-red-500" : ""}`} />
             {createForm.formState.errors.password && <p className="text-xs text-red-500">{createForm.formState.errors.password.message}</p>}
           </div>
+
+          <div className="space-y-1 mt-2">
+            <div className="flex justify-between items-center border-t border-white/10 pt-4 mt-2">
+              <Label className="text-juridico-gold text-sm font-medium">Contatos Alternativos (Opcional)</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => appendCreateContact({ type: "phone", value: "" })} className="bg-juridico-plate/30 border-white/10 text-xs h-7 text-zinc-300 hover:text-white">
+                <Plus className="w-3 h-3 mr-1" /> Adicionar Contato
+              </Button>
+            </div>
+            <div className="space-y-2 mt-2">
+              {createContacts.map((field, index) => (
+                <div key={field.id} className="flex gap-2 items-center bg-black/20 p-2 rounded border border-white/5 animate-in fade-in">
+                  <div className="w-[120px]">
+                    <select {...createForm.register(`additionalContacts.${index}.type`)} className={selectClass}>
+                      <option value="phone">Telefone</option>
+                      <option value="email">E-mail</option>
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <Input {...createForm.register(`additionalContacts.${index}.value`)} className={`${inputClass} border border-white/10`} placeholder="Valor..." onChange={(e) => { if(createForm.watch(`additionalContacts.${index}.type`) === "phone") { e.target.value = phoneMask(e.target.value); } createForm.register(`additionalContacts.${index}.value`).onChange(e); }} />
+                  </div>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeCreateContact(index)} className="h-10 w-10 p-0 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 shrink-0 border border-white/5 rounded-md bg-juridico-plate/30">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="pt-4 flex justify-end gap-3 border-t border-white/10 mt-6">
             <Button type="button" variant="ghost" className={btnGhost} onClick={() => setIsCreateOpen(false)} disabled={isSaving}>Cancelar</Button>
             <Button type="submit" isLoading={isSaving} disabled={isSaving} className={btnPrimary}>Gerar Acesso</Button>
@@ -324,9 +406,42 @@ export default function EquipeClientPage({
             </div>
             <div className="space-y-1">
               <Label htmlFor="e_phone" className="text-juridico-gold">Celular</Label>
-              <Input id="e_phone" {...editForm.register("phone")} className={inputClass} />
+              <Input id="e_phone" {...editForm.register("phone")} onChange={(e) => { e.target.value = phoneMask(e.target.value); editForm.register("phone").onChange(e); }} className={inputClass} placeholder="(11) 99999-9999" />
             </div>
           </div>
+          <div className="space-y-1">
+            <Label htmlFor="e_email" className="text-juridico-gold">E-mail de Acesso <span className="text-juridico-brandlight">*</span></Label>
+            <Input id="e_email" type="email" {...editForm.register("email")} className={`${inputClass} ${editForm.formState.errors.email ? "border-red-500" : ""}`} />
+            {editForm.formState.errors.email && <p className="text-xs text-red-500">{editForm.formState.errors.email.message}</p>}
+          </div>
+
+          <div className="space-y-1 mt-2">
+            <div className="flex justify-between items-center border-t border-white/10 pt-4 mt-2">
+              <Label className="text-juridico-gold text-sm font-medium">Contatos Alternativos (Opcional)</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => appendEditContact({ type: "phone", value: "" })} className="bg-juridico-plate/30 border-white/10 text-xs h-7 text-zinc-300 hover:text-white">
+                <Plus className="w-3 h-3 mr-1" /> Adicionar Contato
+              </Button>
+            </div>
+            <div className="space-y-2 mt-2">
+              {editContacts.map((field, index) => (
+                <div key={field.id} className="flex gap-2 items-center bg-black/20 p-2 rounded border border-white/5 animate-in fade-in">
+                  <div className="w-[120px]">
+                    <select {...editForm.register(`additionalContacts.${index}.type`)} className={selectClass}>
+                      <option value="phone">Telefone</option>
+                      <option value="email">E-mail</option>
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <Input {...editForm.register(`additionalContacts.${index}.value`)} className={`${inputClass} border border-white/10`} placeholder="Valor..." onChange={(e) => { if(editForm.watch(`additionalContacts.${index}.type`) === "phone") { e.target.value = phoneMask(e.target.value); } editForm.register(`additionalContacts.${index}.value`).onChange(e); }} />
+                  </div>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeEditContact(index)} className="h-10 w-10 p-0 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 shrink-0 border border-white/5 rounded-md bg-juridico-plate/30">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="pt-4 flex justify-end gap-3 border-t border-white/10 mt-6">
             <Button type="button" variant="ghost" className={btnGhost} onClick={() => setIsEditOpen(false)} disabled={isSaving}>Cancelar</Button>
             <Button type="submit" isLoading={isSaving} disabled={isSaving} className={btnPrimary}>Salvar Alterações</Button>

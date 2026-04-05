@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, pgEnum, index, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, pgEnum, index, jsonb, boolean, primaryKey } from "drizzle-orm/pg-core";
 
 // Enumeração global de Permissões
 export const roleEnum = pgEnum("role", ["admin", "advogado", "estagiario"]);
@@ -30,6 +30,7 @@ export const users = pgTable("users", {
   oab: text("oab"),                        // Número da OAB (opcional para estagiários)
   phone: text("phone"),                    // WhatsApp/Telefone de contato
   role: roleEnum("role").default("admin").notNull(),
+  additionalContacts: jsonb("additional_contacts"), // { type: "phone" | "email", value: "..." }[]
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => {
   return {
@@ -91,13 +92,15 @@ export const actionTypes = pgTable("action_types", {
   };
 });
 
-// Tabela de Tribunais (Global)
+// Tabela de Tribunais (Catálogo Global)
 export const courts = pgTable("courts", {
   id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),       // ex: Tribunal de Justiça de São Paulo
-  acronym: text("acronym").notNull(), // ex: TJSP
-  uf: text("uf").notNull(),           // ex: SP
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  code: text("code"),                 // ex: 8.26
+  name: text("name").notNull(),       // ex: Tribunal de Justiça do Estado de São Paulo
+  abbreviation: text("abbreviation"), // ex: TJSP
+  type: text("type"),                 // estadual, federal, trabalho, eleitoral, superior
+  state: text("state"),               // ex: SP
+  city: text("city"),                 // ex: São Paulo
 });
 
 // Tabela de Profissões (Global + Local)
@@ -112,3 +115,120 @@ export const professions = pgTable("professions", {
   };
 });
 
+
+// Enumeração de Status do Caso
+export const caseStatusEnum = pgEnum("case_status", ["ativo", "pendente", "fechado"]);
+
+// Tabela de Casos (Processos)
+export const cases = pgTable("cases", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  lawyerId: uuid("lawyer_id")
+    .references(() => users.id, { onDelete: "set null" }), // Advogado responsável
+  actionTypeId: uuid("action_type_id")
+    .references(() => actionTypes.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  cnjNumber: text("cnj_number"),
+  controlNumber: text("control_number"),
+  tr: text("tr"),
+  origin: text("origin"),
+  processClass: text("process_class"),
+  processType: text("process_type"),
+  courtId: uuid("court_id").references(() => courts.id, { onDelete: "set null" }),
+  forum: text("forum"), // Adicionado de volta para separar Foro
+  courtDepartmentId: uuid("court_department_id").references(() => courtDepartments.id, { onDelete: "set null" }), // Representa a Vara
+  subject: text("subject"),
+  estimatedValue: text("estimated_value"),
+  movementDate: text("movement_date"),
+  startDate: text("start_date"),
+  distributionDate: text("distribution_date"),
+  expectedConclusionDate: text("expected_conclusion_date"),
+  status: caseStatusEnum("status").default("ativo").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    casesTenantIdx: index("cases_tenant_id_idx").on(table.tenantId),
+  };
+});
+
+// Tabela de Prazos
+export const deadlines = pgTable("deadlines", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  caseId: uuid("case_id")
+    .notNull()
+    .references(() => cases.id, { onDelete: "cascade" }),
+  description: text("description").notNull(),
+  dueDate: timestamp("due_date").notNull(),
+  isUrgent: boolean("is_urgent").default(false).notNull(),
+  isCompleted: boolean("is_completed").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    deadlinesTenantIdx: index("deadlines_tenant_id_idx").on(table.tenantId),
+  };
+});
+
+// Tabela de Tarefas
+export const tasks = pgTable("tasks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  caseId: uuid("case_id")
+    .references(() => cases.id, { onDelete: "cascade" }), // Pode estar associada a um caso ou não
+  assigneeId: uuid("assignee_id")
+    .references(() => users.id, { onDelete: "set null" }), // Usuário responsável
+  description: text("description").notNull(),
+  dueDate: timestamp("due_date"),
+  isCompleted: boolean("is_completed").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    tasksTenantIdx: index("tasks_tenant_id_idx").on(table.tenantId),
+  };
+});
+
+// Tabela de Órgãos Julgadores (Varas/Foros)
+export const courtDepartments = pgTable("court_departments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  courtId: uuid("court_id").references(() => courts.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+});
+
+// Tabela de Andamentos (Histórico do Processo)
+export const caseMovements = pgTable("case_movements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  caseId: uuid("case_id").notNull().references(() => cases.id, { onDelete: "cascade" }),
+  date: timestamp("date").notNull(),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Tabela de Documentos do Processo
+export const caseDocuments = pgTable("case_documents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  caseId: uuid("case_id").notNull().references(() => cases.id, { onDelete: "cascade" }),
+  fileName: text("file_name").notNull(),
+  fileUrl: text("file_url").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Tabela de Junção para Litisconsórcio / Co-participantes
+export const caseClients = pgTable("case_clients", {
+  processId: uuid("process_id").references(() => cases.id, { onDelete: "cascade" }).notNull(),
+  clientId: uuid("client_id").references(() => clients.id, { onDelete: "cascade" }).notNull(),
+  type: text("type").default("Litisconsorte").notNull(), // Herdeiro, Litisconsorte, etc.
+}, (t) => [
+  primaryKey({ columns: [t.processId, t.clientId] }),
+]);

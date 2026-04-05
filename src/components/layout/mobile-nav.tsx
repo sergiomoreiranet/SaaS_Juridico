@@ -41,8 +41,8 @@ export function MobileNav() {
               <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-white bg-white/5 border border-white/5 shadow-sm transition-colors hover:border-juridico-gold/30 hover:shadow-[0_0_10px_rgba(212,175,55,0.1)]">
                 <Briefcase className="h-5 w-5 text-juridico-gold" /> Dashboard
               </Link>
-              <Link href="/casos" onClick={() => setIsOpen(false)} className="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                <Briefcase className="h-5 w-5" /> Casos
+              <Link href="/processos" onClick={() => setIsOpen(false)} className="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
+                <Briefcase className="h-5 w-5" /> Processos
               </Link>
               <Link href="/prazos" onClick={() => setIsOpen(false)} className="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
                 <CalendarClock className="h-5 w-5" /> Prazos

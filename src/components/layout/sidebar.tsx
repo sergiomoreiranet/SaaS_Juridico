@@ -7,7 +7,7 @@ import { Scale, LayoutDashboard, Briefcase, CalendarClock, Users, Settings, LogO
 
 const navMain = [
   { href: "/",             label: "Dashboard",     icon: LayoutDashboard },
-  { href: "/casos",        label: "Casos",         icon: Briefcase       },
+  { href: "/processos",        label: "Processos",         icon: Briefcase       },
   { href: "/clientes",     label: "Clientes",      icon: Users           },
   { href: "/prazos",       label: "Agenda",        icon: CalendarClock   },
   { href: "/documentos",   label: "Documentos",    icon: Shield          },

@@ -10,7 +10,7 @@ export default async function ConfiguracoesPage() {
 
   const [tenantActionTypes, allCourts] = await Promise.all([
     db.select().from(actionTypes).where(eq(actionTypes.tenantId, tenantId)).orderBy(desc(actionTypes.createdAt)),
-    db.select().from(courts).orderBy(desc(courts.createdAt))
+    db.select().from(courts).orderBy(courts.name)
   ]);
 
   return <ConfigClientPage actionTypes={tenantActionTypes} courts={allCourts} userRole={(user as any).role} />;

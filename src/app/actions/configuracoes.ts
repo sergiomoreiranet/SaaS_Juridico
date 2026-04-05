@@ -23,16 +23,16 @@ export async function createActionType(name: string) {
   }
 }
 
-export async function createCourt(name: string, acronym: string, uf: string) {
+export async function createCourt(name: string, abbreviation: string, state: string) {
   try {
     const user = await requireUser();
     if ((user as any).role !== "admin") throw new Error("Apenas admins podem criar tribunais.");
-    if (!name.trim() || !acronym.trim() || !uf.trim()) throw new Error("Todos os campos do tribunal são obrigatórios.");
+    if (!name.trim() || !abbreviation.trim() || !state.trim()) throw new Error("Todos os campos do tribunal são obrigatórios.");
 
     await db.insert(courts).values({
       name: name.trim(),
-      acronym: acronym.trim(),
-      uf: uf.trim()
+      abbreviation: abbreviation.trim(),
+      state: state.trim()
     });
     revalidatePath("/configuracoes");
     return { success: true };
