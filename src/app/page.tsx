@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import EscritorioSearch from '@/components/EscritorioSearch';
 
 // ============================================================
 // SEÇÕES DA LANDING PAGE JURIADM
@@ -130,7 +131,7 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors hidden sm:block">
-              Entrar
+              Admin
             </Link>
             <Link href="/cadastro" className="text-sm px-4 py-2 rounded-lg font-medium transition-all" style={{ background: '#8b0000', color: 'white' }}>
               Teste Grátis
@@ -169,13 +170,28 @@ export default function LandingPage() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Link href="/cadastro" className="w-full sm:w-auto px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-lg hover:opacity-90 hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg, #8b0000, #a31111)', color: 'white', boxShadow: '0 0 30px rgba(139,0,0,0.3)' }}>
               Solicitar Teste de 15 Dias →
             </Link>
-            <Link href="/login" className="w-full sm:w-auto px-8 py-4 rounded-xl font-medium text-lg transition-all border border-white/10 hover:border-white/20 hover:bg-white/5" style={{ color: 'white' }}>
-              Já tenho conta
-            </Link>
+          </div>
+
+          {/* ── ACESSO AO ESCRITÓRIO ── */}
+          <div
+            className="w-full max-w-lg mx-auto p-6 rounded-2xl border"
+            style={{
+              background: 'rgba(14,14,14,0.7)',
+              borderColor: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(12px)',
+            }}
+          >
+            <p className="text-sm font-semibold text-white/80 mb-1 text-center">
+              Já é cliente? Acesse seu escritório
+            </p>
+            <p className="text-xs text-white/35 mb-4 text-center">
+              Encontre seu escritório pelo nome e acesse diretamente o sistema
+            </p>
+            <EscritorioSearch />
           </div>
 
           {/* Social proof micro */}

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:admin": "dotenv -e .env tsx src/db/seed-super-admin.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

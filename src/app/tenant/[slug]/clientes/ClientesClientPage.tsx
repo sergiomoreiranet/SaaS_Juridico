@@ -273,7 +273,7 @@ export default function ClientesClientPage({ initialData, slug }: { initialData:
                   <TableCell className="text-zinc-400">{client.cpfCnpj || "—"}</TableCell>
                   <TableCell className="text-zinc-400">
                     <div className="flex flex-col">
-                      <span className="text-sm">{client.email || "—"}</span>
+                      {client.email && <span className="text-sm">{client.email}</span>}
                       <div className="flex flex-col gap-0.5 mt-1">
                         {Array.isArray(client.phones) && client.phones.length > 0 ? (
                           client.phones.map((p: any, idx: number) => (

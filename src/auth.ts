@@ -38,6 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .select({
             user: users,
             tenantStatus: tenants.status,
+            tenantSlug: tenants.slug,
           })
           .from(users)
           .leftJoin(tenants, eq(users.tenantId, tenants.id))
@@ -47,6 +48,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const row = result[0];
         const user = row?.user;
         const tenantStatus = row?.tenantStatus;
+        const tenantSlug = row?.tenantSlug;
 
         if (!user || !user.password) {
           throw new Error("Usuário não encontrado.");
@@ -66,6 +68,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           tenantId: user.tenantId,
           role: user.role,
           tenantStatus: tenantStatus,
+          tenantSlug: tenantSlug,
         };
       },
     }),
@@ -88,6 +91,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.tenantId = (user as any).tenantId;
         token.role = (user as any).role;
         token.tenantStatus = (user as any).tenantStatus;
+        token.tenantSlug = (user as any).tenantSlug;
         token.isSuperAdmin = user.email === process.env.SUPER_ADMIN_EMAIL;
         token.absoluteExpiry = Date.now() + 15 * 60 * 1000;
       }
@@ -117,6 +121,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (session.user as any).tenantId = token.tenantId as string;
         (session.user as any).role = token.role as string;
         (session.user as any).tenantStatus = token.tenantStatus as string;
+        (session.user as any).tenantSlug = token.tenantSlug as string;
         (session.user as any).isSuperAdmin = token.isSuperAdmin as boolean;
       }
       return session;
