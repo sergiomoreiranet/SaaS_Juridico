@@ -76,13 +76,13 @@ Fase 1 - MVP - Escritório piloto rodando, prazos nunca perdidos
 		[✅] Lista de prazos urgentes com link direto para o caso
 
 	F1-B8 - Casos + Prazos
-		[ ] Tabela cases (id, tenant_id, cliente_id, advogado_id, tipo_id, número CNJ, status)
-		[ ] CRUD de casos com formulário completo
-		[ ] Tabela deadlines (caso_id, tenant_id, descrição, data, dias_úteis, status)
-		[ ] Tabela tasks (caso_id, tenant_id, descrição, responsável, data, status) — separada de deadlines
-		[ ] Lógica de cálculo de dias úteis (fds + feriados nacionais)
-		[ ] Marcar prazo/tarefa como cumprido
-		[ ] Página de detalhe do caso com histórico de prazos e tarefas
+		[✅] Tabela cases (id, tenant_id, cliente_id, advogado_id, tipo_id, número CNJ, status)
+		[✅] CRUD de casos com formulário completo
+		[✅] Tabela deadlines (caso_id, tenant_id, descrição, data, dias_úteis, status)
+		[✅] Tabela tasks (caso_id, tenant_id, descrição, responsável, data, status) — separada de deadlines
+		[✅] Lógica de cálculo de dias úteis (fds + feriados nacionais)
+		[✅] Marcar prazo/tarefa como cumprido
+		[✅] Página de detalhe do caso com histórico de prazos e tarefas
 
 	F1-B9 - Painel Super Admin (Aprovação e Gestão do SaaS)
 		[✅] Subdomínio exclusivo: admin.juriadm.com.br (roteado via proxy.ts)

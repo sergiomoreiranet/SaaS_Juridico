@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import { db } from "@/db";
-import { cases, clients, courts, courtDepartments, tenants, caseClients as caseClientsTable } from "@/db/schema";
+import { cases, clients, courts, courtDepartments, tenants, caseClients as caseClientsTable, deadlines, tasks, users } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireUser } from "@/lib/session";
 import Link from "next/link";
-import { ArrowLeft, Scale, Building2, CalendarDays, FileText, Activity, Landmark, Folder, Users } from "lucide-react";
+import { ArrowLeft, Scale, Building2, CalendarDays, FileText, Users } from "lucide-react";
+import CaseTabsClientView from "./CaseTabsClientView";
 
 export default async function ProcessoDossierPage({
   params,
@@ -80,6 +81,32 @@ export default async function ProcessoDossierPage({
   .from(caseClientsTable)
   .leftJoin(clients, eq(caseClientsTable.clientId, clients.id))
   .where(eq(caseClientsTable.processId, id));
+
+  // Buscar Prazos do Caso
+  const caseDeadlines = await db.select().from(deadlines)
+    .where(and(eq(deadlines.caseId, id), eq(deadlines.tenantId, tenantId)))
+    .orderBy(deadlines.dueDate);
+
+  // Buscar Tarefas do Caso
+  const caseTasks = await db.select({
+    id: tasks.id,
+    description: tasks.description,
+    dueDate: tasks.dueDate,
+    isCompleted: tasks.isCompleted,
+    assigneeId: tasks.assigneeId,
+    assigneeName: users.name,
+  })
+  .from(tasks)
+  .leftJoin(users, eq(tasks.assigneeId, users.id))
+  .where(and(eq(tasks.caseId, id), eq(tasks.tenantId, tenantId)))
+  .orderBy(tasks.dueDate);
+
+  // Buscar Membros da Equipe do Tenant
+  const teamMembers = await db.select({
+    id: users.id,
+    name: users.name,
+    role: users.role,
+  }).from(users).where(eq(users.tenantId, tenantId));
 
   const formatCurrency = (value: string | null) => {
     if (!value) return "Não informado";
@@ -238,38 +265,14 @@ export default async function ProcessoDossierPage({
           </div>
         </div>
 
-        {/* Coluna Central/Direita: Abas / Módulos de Visualização (Histórico e Documentos) */}
+        {/* Coluna Central/Direita: Abas Interativas de Prazos, Tarefas e Mais */}
         <div className="lg:col-span-2">
-          <div className="bg-[#111111] border border-white/5 rounded-2xl overflow-hidden h-full flex flex-col min-h-[500px]">
-            {/* Headers das Abas Fakes para o Layout Inicial */}
-            <div className="flex items-center border-b border-white/5 bg-black/20">
-              <button className="px-6 py-4 text-sm font-medium border-b-2 border-juridico-gold text-juridico-gold flex items-center gap-2 bg-white/5 transition-colors">
-                <Activity className="w-4 h-4" /> Linha do Tempo
-              </button>
-              <button className="px-6 py-4 text-sm font-medium border-b-2 border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] flex items-center gap-2 transition-colors">
-                <Folder className="w-4 h-4" /> Documentos Anexos
-              </button>
-              <button className="px-6 py-4 text-sm font-medium border-b-2 border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] flex items-center gap-2 transition-colors lg:hidden xl:flex">
-                <Landmark className="w-4 h-4" /> Honorários & Custas
-              </button>
-            </div>
-            
-            {/* Conteúdo Aba - Em Breve (State atual: mockup limpo) */}
-            <div className="flex-1 p-8 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-juridico-brand/10 border border-juridico-brand/20 flex items-center justify-center text-juridico-brandlight">
-                <Activity className="w-8 h-8" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-medium text-white">Central de Andamentos</h3>
-                <p className="text-sm text-zinc-500 max-w-sm mx-auto">
-                  Este módulo listará todas as petições, movimentações processuais e intimações deste caso de forma cronológica.
-                </p>
-              </div>
-              <button className="mt-4 px-4 py-2 bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10 rounded-lg text-sm transition-colors opacity-50 cursor-not-allowed">
-                Módulo em Desenvolvimento...
-              </button>
-            </div>
-          </div>
+          <CaseTabsClientView
+            caseId={caso.id}
+            deadlines={caseDeadlines}
+            tasks={caseTasks}
+            teamMembers={teamMembers}
+          />
         </div>
 
       </div>
